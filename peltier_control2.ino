@@ -1,3 +1,11 @@
+/**
+   Peltier controller arduino project.
+   History:
+   2015.??.?? - Initial version created
+   2018.07.29 - Revised to open this project - 
+
+ */
+
 #define REVISION_STRING         "Rev 2.00"
 #include <PV_RTD_RS232_RS485_Memory_Map.h>
 #include <PV_RTD_RS232_RS485_Shield.h>
@@ -315,7 +323,7 @@ void setup() {
   
   readSaveDataFromEEPROM(&g_save_data);
   if ( isnan(g_save_data.setpoint) ){
-     g_save_data.setpoint = 16.0;
+    g_save_data.setpoint = 16.0;
   }
   g_status.pid_target_temp = g_status.setpoint = g_save_data.setpoint;
   if ( isnan(g_save_data.p) || g_save_data.p == 0.0f){
@@ -379,11 +387,11 @@ void menu(void){
   static unsigned long menu_time=0;
   static uint8_t menu_context=0;
   static const menu_context_proc_t menu_context_proc[] = {
-    main_ui,
-    temperature_detail_ui,
-    pid_ui,
-    stability_ui,
-    version_ui
+							  main_ui,
+							  temperature_detail_ui,
+							  pid_ui,
+							  stability_ui,
+							  version_ui
   };
   static const uint8_t num_context=sizeof(menu_context_proc)/sizeof(menu_context_proc_t); 
 
@@ -513,13 +521,13 @@ void display_main_lcd(){
   int roomtemp_integer, roomtemp_float;
   float_to_int(g_status.env_temp, &roomtemp_integer, &roomtemp_float);
   char error_str[4][10+1]={
-    /*
-     0123456789
-    */
-    "NONE",
-    "OC", // over current
-    "OT", // over temp
-    "OC&OT"};
+			   /*
+			     0123456789
+			   */
+			   "NONE",
+			   "OC", // over current
+			   "OT", // over temp
+			   "OC&OT"};
   uint8_t error_val = (g_status.over_current!=0) |  (g_status.over_temp!=0)<<1;
 
   //            0123  4567  89 AB CD  EF01234  56  789ABCDEF
@@ -685,7 +693,7 @@ void print_float(float f){
   lcd.print( "."    );
   int ii=( f-(float)i )*100.0f;
   lcd.print( ii/10 );
-//lcd.print( ii%10 );
+  //lcd.print( ii%10 );
 }
 void float_to_int(float f, int* integer_part, int* mantissa){
   *integer_part=(int)f;
@@ -705,24 +713,24 @@ void updateLCD( const char display_lines[16*2+1]){
   updateLCDLine(1, &display_lines[16]);
 }
 void updateLCDLine( int line , const char str[16] ){
-    for ( int col = 0 ; col < 16 ; col++ ){
-      char c = (str[col]==0?' ':str[col]);
-      if ( lcd_buf[line][col] != c ){
-	lcd.setCursor(col,line);
-	lcd.write(c);
-	lcd_buf[line][col]=c;
-	for ( int col2 = col+1 ; col2 < 16 ; col2++ ){
-	  c = (str[col2]==0?' ':str[col2]);
-	  if ( lcd_buf[line][col2] != c ){
-	    lcd.write(c);
-	    lcd_buf[line][col2]=c;
-	  }else{
-	    col = col2;
-	    break;
-	  }
+  for ( int col = 0 ; col < 16 ; col++ ){
+    char c = (str[col]==0?' ':str[col]);
+    if ( lcd_buf[line][col] != c ){
+      lcd.setCursor(col,line);
+      lcd.write(c);
+      lcd_buf[line][col]=c;
+      for ( int col2 = col+1 ; col2 < 16 ; col2++ ){
+	c = (str[col2]==0?' ':str[col2]);
+	if ( lcd_buf[line][col2] != c ){
+	  lcd.write(c);
+	  lcd_buf[line][col2]=c;
+	}else{
+	  col = col2;
+	  break;
 	}
       }
     }
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -759,9 +767,9 @@ void get_thermistor_temp(){
     average[thermistor] = 0;
     sample_count=0;
     for( i=0; i< NUMSAMPLES; i++) {
-    average[thermistor] += samples[thermistor][i];
-    sample_count++;
-  }
+      average[thermistor] += samples[thermistor][i];
+      sample_count++;
+    }
     average[thermistor] /= sample_count;
 #ifdef SERIAL_DEBUG
     Serial.print("Average analog reading "); 
@@ -912,11 +920,11 @@ void serial_processing(void){
   }
   //send-receive with processing if it's time
   if(millis()>serialTime)
-  {
-    SerialReceive();
-    SerialSend();
-    serialTime+=10000;
-  }
+    {
+      SerialReceive();
+      SerialSend();
+      serialTime+=10000;
+    }
 }
  
 //////////////////////////////////////////////////////////////////////////////////
@@ -926,7 +934,7 @@ union {                // This Data structure lets
   byte asBytes[24];    // us take the byte array
   float asFloat[6];    // sent from processing and
 }                      // easily convert it to a
-foo;                   // float array
+  foo;                   // float array
 
 // getting float values from processing into the arduino
 // was no small task.  the way this program does it is
@@ -956,41 +964,41 @@ void SerialReceive()
   byte Auto_Man = -1;
   byte Direct_Reverse = -1;
   while(Serial.available()&&index<26)
-  {
-    if(index==0) Auto_Man = Serial.read();
-    else if(index==1) Direct_Reverse = Serial.read();
-    else foo.asBytes[index-2] = Serial.read();
-    index++;
-  } 
+    {
+      if(index==0) Auto_Man = Serial.read();
+      else if(index==1) Direct_Reverse = Serial.read();
+      else foo.asBytes[index-2] = Serial.read();
+      index++;
+    } 
   
   // if the information we got was in the correct format, 
   // read it into the system
   if(index==26  && (Auto_Man==0 || Auto_Man==1)&& (Direct_Reverse==0 || Direct_Reverse==1))
-  {
-    g_status.setpoint=double(foo.asFloat[0]);
-    //Input=double(foo.asFloat[1]);       // * the user has the ability to send the 
-                                          //   value of "Input"  in most cases (as 
-                                          //   in this one) this is not needed.
-    if(Auto_Man==0)                       // * only change the output if we are in 
-    {                                     //   manual mode.  otherwise we'll get an
-      g_status.output=double(foo.asFloat[2]);      //   output blip, then the controller will 
-    }                                     //   overwrite.
+    {
+      g_status.setpoint=double(foo.asFloat[0]);
+      //Input=double(foo.asFloat[1]);       // * the user has the ability to send the 
+      //   value of "Input"  in most cases (as 
+      //   in this one) this is not needed.
+      if(Auto_Man==0)                       // * only change the output if we are in 
+	{                                     //   manual mode.  otherwise we'll get an
+	  g_status.output=double(foo.asFloat[2]);      //   output blip, then the controller will 
+	}                                     //   overwrite.
     
-    double p, i, d;                       // * read in and set the controller tunings
-    p = double(foo.asFloat[3]);           //
-    i = double(foo.asFloat[4]);           //
-    d = double(foo.asFloat[5]);           //
-    peltierPID.SetTunings(p, i, d);            //
+      double p, i, d;                       // * read in and set the controller tunings
+      p = double(foo.asFloat[3]);           //
+      i = double(foo.asFloat[4]);           //
+      d = double(foo.asFloat[5]);           //
+      peltierPID.SetTunings(p, i, d);            //
     
-    if(Auto_Man==0) peltierPID.SetMode(MANUAL);// * set the controller mode
-    else peltierPID.SetMode(AUTOMATIC);             //
+      if(Auto_Man==0) peltierPID.SetMode(MANUAL);// * set the controller mode
+      else peltierPID.SetMode(AUTOMATIC);             //
     
-    if(Direct_Reverse==0) peltierPID.SetControllerDirection(DIRECT);// * set the controller Direction
-    else peltierPID.SetControllerDirection(REVERSE);          //
+      if(Direct_Reverse==0) peltierPID.SetControllerDirection(DIRECT);// * set the controller Direction
+      else peltierPID.SetControllerDirection(REVERSE);          //
 
-    //update eeprom
-    updatePIDforEEPROM(p,i,d);
-  }
+      //update eeprom
+      updatePIDforEEPROM(p,i,d);
+    }
   
   Serial.flush();                         // * clear any random data from the serial buffer
 }
@@ -1089,7 +1097,7 @@ void power_supply_control(){
 }
 
 
-// ----------------------------------------------EEPROM READ/WRITE
+// ---------------------------------------------- Start of EEPROM READ/WRITE
 void updatePIDforEEPROM(double p, double i, double d){
   g_save_data.p = p;
   g_save_data.i = i;
@@ -1124,5 +1132,5 @@ void   WriteDoubleEEPROM( int addr, double value ){
     EEPROM.write(addr+i,buf[i]);
   }
 }
-// ----------------------------------------------EEPROM READ/WRITE
+// ---------------------------------------------- END of EEPROM READ/WRITE
 
